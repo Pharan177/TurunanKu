@@ -1,0 +1,6 @@
+{
+  "name": "TurunanKu — Belajar Turunan Interaktif & Menyenangkan",
+  "description": "Platform pembelajaran kalkulus turunan interaktif yang menyenangkan, visual, dan ramah pelajar dengan animasi, lab simulasi kurva, dan gamifikasi.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
