@@ -80,21 +80,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </button>
         </div>
 
-        {/* Motivational Greeting with Mascot Duki */}
-        <div className="p-3 mb-4 rounded-2xl bg-gradient-to-r from-indigo-950/70 to-slate-800/60 border border-indigo-900/50 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <span className="text-xl select-none animate-bounce">🐤</span>
-            <div>
-              <div className="text-[11px] font-semibold text-slate-300">Halo, Sobat Kalkulus!</div>
-              <div className="text-xs font-bold text-amber-300">
-                Bersama Duki Si Bebek
-              </div>
-            </div>
-          </div>
-          <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono">
-            Siap Belajar
-          </span>
-        </div>
+
 
         {/* Navigation List */}
         <nav className="space-y-1 flex-1 overflow-y-auto pr-1" aria-label="Navigasi Menu Utama">

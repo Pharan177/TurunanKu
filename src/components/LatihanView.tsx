@@ -14,13 +14,15 @@ import {
   Award,
   ChevronRight,
   BookOpen,
+  Lock,
 } from 'lucide-react';
 
 interface LatihanViewProps {
-  onNavigate: (page: PageId) => void;
+  onNavigate: (page: PageId, chapterIndex?: number) => void;
   solvedQuestions: string[];
   userAnswers: Record<string, string>;
   onSolveQuestion: (key: string, answer: string) => void;
+  completedChapters?: number[];
 }
 
 export const LatihanView: React.FC<LatihanViewProps> = ({
@@ -28,6 +30,7 @@ export const LatihanView: React.FC<LatihanViewProps> = ({
   solvedQuestions,
   userAnswers,
   onSolveQuestion,
+  completedChapters = [],
 }) => {
   const [activeTopic, setActiveTopic] = useState<number | null>(null);
   const [activeLevel, setActiveLevel] = useState<number | null>(null);
@@ -36,6 +39,52 @@ export const LatihanView: React.FC<LatihanViewProps> = ({
   const [inputs, setInputs] = useState<Record<string, string>>(userAnswers || {});
   const [openExplanations, setOpenExplanations] = useState<Record<string, boolean>>({});
   const [feedbacks, setFeedbacks] = useState<Record<string, { correct: boolean; msg: string }>>({});
+
+  // Topic Unlock Requirements
+  const getTopicRequirement = (topicId: number) => {
+    switch (topicId) {
+      case 0:
+        return {
+          isUnlocked: completedChapters.includes(0) || completedChapters.includes(1),
+          chapterIdx: 0,
+          label: 'Bab 01 · Definisi Limit & Gradien',
+        };
+      case 1:
+        return {
+          isUnlocked: completedChapters.includes(2),
+          chapterIdx: 2,
+          label: 'Bab 03 · Aturan Operasi Aljabar & Rantai',
+        };
+      case 2:
+        return {
+          isUnlocked: completedChapters.includes(3),
+          chapterIdx: 3,
+          label: 'Bab 04 · Turunan Fungsi Eksponensial',
+        };
+      case 3:
+        return {
+          isUnlocked: completedChapters.includes(4),
+          chapterIdx: 4,
+          label: 'Bab 05 · Turunan Fungsi Trigonometri',
+        };
+      case 4:
+        return {
+          isUnlocked: completedChapters.includes(5),
+          chapterIdx: 5,
+          label: 'Bab 06 · Aplikasi Turunan & Garis Singgung',
+        };
+      case 5:
+        return {
+          isUnlocked: [0, 1, 2, 3, 4, 5].every((ch) => completedChapters.includes(ch)),
+          chapterIdx: 0,
+          label: 'Seluruh 6 Bab Pembelajaran',
+        };
+      default:
+        return { isUnlocked: true, chapterIdx: 0, label: '' };
+    }
+  };
+
+  const unlockedTopicsCount = TOPICS_DATA.filter((t) => getTopicRequirement(t.id).isUnlocked).length;
 
   // Helper to count solved questions per topic & level
   const getSolvedCount = (topicIdx: number, levelIdx: number) => {
@@ -104,12 +153,30 @@ export const LatihanView: React.FC<LatihanViewProps> = ({
           </h1>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700">
+            Topik Terbuka: <strong className="font-mono">{unlockedTopicsCount}</strong> / 6
+          </span>
           <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-2xs text-slate-600">
             Total Tuntas: <strong className="text-emerald-600 font-mono">{solvedQuestions.length}</strong> / 54 Soal
           </span>
         </div>
       </div>
+
+      {/* Unlock Progression Banner */}
+      {activeTopic === null && (
+        <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/90 text-xs text-amber-900 flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <Lock className="w-4 h-4 text-amber-600 shrink-0" />
+            <span>
+              <strong>Fitur Latihan Berjenjang:</strong> Setiap topik latihan terbuka otomatis setelah kamu menuntaskan bab materi yang bersesuaian di menu Materi.
+            </span>
+          </div>
+          <span className="font-semibold text-amber-800 font-mono text-[11px] bg-white px-2 py-0.5 rounded border border-amber-200">
+            {completedChapters.length} / 6 Bab Selesai
+          </span>
+        </div>
+      )}
 
       {/* VIEW 1: TOPIC SELECTION */}
       {activeTopic === null && (
@@ -120,30 +187,85 @@ export const LatihanView: React.FC<LatihanViewProps> = ({
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {TOPICS_DATA.map((topic) => {
+              const req = getTopicRequirement(topic.id);
+              const isUnlocked = req.isUnlocked;
               const solvedCount = getTopicTotalSolved(topic.id);
+
               return (
                 <div
                   key={topic.id}
-                  onClick={() => setActiveTopic(topic.id)}
-                  className="p-5 rounded-3xl bg-white border border-slate-200/90 shadow-xs hover:shadow-md hover:border-indigo-300 transition-all hover:-translate-y-1 cursor-pointer flex flex-col justify-between"
+                  onClick={() => {
+                    if (isUnlocked) {
+                      setActiveTopic(topic.id);
+                    }
+                  }}
+                  className={`p-5 rounded-3xl border transition-all flex flex-col justify-between ${
+                    isUnlocked
+                      ? 'bg-white border-slate-200/90 shadow-xs hover:shadow-md hover:border-indigo-300 hover:-translate-y-1 cursor-pointer'
+                      : 'bg-slate-50/90 border-slate-200 opacity-90'
+                  }`}
                 >
                   <div className="space-y-2">
-                    <span className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${topic.tagColor}`}>
-                      {topic.number}
-                    </span>
+                    <div className="flex items-center justify-between">
+                      <span className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${topic.tagColor}`}>
+                        {topic.number}
+                      </span>
+                      {isUnlocked ? (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          ✓ Terbuka
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-200 text-slate-600 flex items-center gap-1">
+                          <Lock className="w-3 h-3" />
+                          Terkunci
+                        </span>
+                      )}
+                    </div>
+
                     <h2 className="font-bold text-slate-900 text-base font-['Outfit'] leading-snug">
                       {topic.title}
                     </h2>
                     <p className="text-xs text-slate-500 leading-relaxed">
                       {topic.desc}
                     </p>
+
+                    {!isUnlocked && (
+                      <div className="p-2.5 rounded-xl bg-amber-50/80 border border-amber-200/80 text-[11px] text-amber-900 space-y-1 mt-2">
+                        <div className="font-semibold flex items-center gap-1">
+                          <Lock className="w-3 h-3 text-amber-600" />
+                          <span>Syarat Membuka Topik:</span>
+                        </div>
+                        <div className="text-[10.5px] text-amber-800">
+                          Selesaikan <strong>{req.label}</strong>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-indigo-600">
-                    <span className="text-[11px] font-mono text-slate-500">
-                      {solvedCount} dari 9 soal tuntas
-                    </span>
-                    <ArrowRight className="w-4 h-4" />
+                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold">
+                    {isUnlocked ? (
+                      <>
+                        <span className="text-[11px] font-mono text-slate-500">
+                          {solvedCount} dari 9 soal tuntas
+                        </span>
+                        <div className="flex items-center gap-1 text-indigo-600">
+                          <span>Mulai Latihan</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </div>
+                      </>
+                    ) : (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onNavigate('materi', req.chapterIdx);
+                        }}
+                        type="button"
+                        className="w-full py-2 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer border border-indigo-200"
+                      >
+                        <BookOpen className="w-3.5 h-3.5" />
+                        <span>Pelajari Materinya Dulu →</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               );

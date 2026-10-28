@@ -13,7 +13,6 @@ import {
   Zap,
   CheckCircle2,
   Lock,
-  Unlock,
   BookOpen,
   Swords,
   Compass,
@@ -37,30 +36,23 @@ export const GamesView: React.FC<GamesViewProps> = ({
   const [seconds, setSeconds] = useState<number>(0);
   const [isGameActive, setIsGameActive] = useState<boolean>(false);
   const [hasWon, setHasWon] = useState<boolean>(false);
-
-  // Teacher / Preview bypass toggle
-  const [bypassLock, setBypassLock] = useState<boolean>(false);
+  const [hasGameStarted, setHasGameStarted] = useState<boolean>(false);
 
   // Unlock requirements:
   // Zep: Materi 01 & 02 (id: 0, 1)
-  const isZepUnlocked =
-    bypassLock || (completedChapters.includes(0) && completedChapters.includes(1));
+  const isZepUnlocked = completedChapters.includes(0) && completedChapters.includes(1);
 
   // Math Adventure: Materi 03 (id: 2)
-  const isMathAdventureUnlocked =
-    bypassLock || completedChapters.includes(2);
+  const isMathAdventureUnlocked = completedChapters.includes(2);
 
   // Derivative Boxing: Materi 04 & 05 (id: 3, 4)
-  const isBoxingUnlocked =
-    bypassLock || (completedChapters.includes(3) && completedChapters.includes(4));
+  const isBoxingUnlocked = completedChapters.includes(3) && completedChapters.includes(4);
 
   // Match Game: All 6 chapters (id: 0, 1, 2, 3, 4, 5)
-  const isMatchGameUnlocked =
-    bypassLock ||
-    [0, 1, 2, 3, 4, 5].every((chId) => completedChapters.includes(chId));
+  const isMatchGameUnlocked = [0, 1, 2, 3, 4, 5].every((chId) => completedChapters.includes(chId));
 
   // Initialize Cards
-  const startNewGame = () => {
+  const handleStartGame = () => {
     const newCards = generateMatchCards(6);
     setCards(newCards);
     setSelectedCards([]);
@@ -69,17 +61,30 @@ export const GamesView: React.FC<GamesViewProps> = ({
     setSeconds(0);
     setHasWon(false);
     setIsGameActive(true);
+    setHasGameStarted(true);
+    playClickSound();
+  };
+
+  const handleResetGame = () => {
+    setHasGameStarted(false);
+    setIsGameActive(false);
+    setSelectedCards([]);
+    setMatchedPairs([]);
+    setMoves(0);
+    setSeconds(0);
+    setHasWon(false);
     playClickSound();
   };
 
   useEffect(() => {
-    startNewGame();
+    // Generate initial preview cards for the board
+    setCards(generateMatchCards(6));
   }, []);
 
-  // Timer Effect
+  // Timer Effect: ONLY runs when game has started, is active, not won, and game is unlocked
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
-    if (isGameActive && !hasWon && isMatchGameUnlocked) {
+    if (hasGameStarted && isGameActive && !hasWon && isMatchGameUnlocked) {
       interval = setInterval(() => {
         setSeconds((s) => s + 1);
       }, 1000);
@@ -87,11 +92,11 @@ export const GamesView: React.FC<GamesViewProps> = ({
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isGameActive, hasWon, isMatchGameUnlocked]);
+  }, [hasGameStarted, isGameActive, hasWon, isMatchGameUnlocked]);
 
   // Card Click Handler
   const handleCardClick = (card: GameCardItem) => {
-    if (!isGameActive || hasWon || !isMatchGameUnlocked) return;
+    if (!hasGameStarted || !isGameActive || hasWon || !isMatchGameUnlocked) return;
     if (matchedPairs.includes(card.pairId)) return;
     if (selectedCards.length === 1 && selectedCards[0].id === card.id) return;
     if (selectedCards.length >= 2) return;
@@ -153,35 +158,6 @@ export const GamesView: React.FC<GamesViewProps> = ({
             <p className="text-slate-600 text-xs sm:text-sm max-w-2xl mt-1 leading-relaxed">
               Mainkan game interaktif untuk melatih insting kalkulusmu! Setiap game akan terbuka seiring dengan materi yang telah kamu tuntaskan.
             </p>
-          </div>
-
-          {/* Quick Teacher / Exploration Unlock Toggle */}
-          <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2">
-            <button
-              onClick={() => {
-                setBypassLock(!bypassLock);
-                playClickSound();
-              }}
-              type="button"
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold border flex items-center gap-1.5 cursor-pointer transition shadow-2xs ${
-                bypassLock
-                  ? 'bg-amber-100 text-amber-800 border-amber-300'
-                  : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200'
-              }`}
-              title="Buka akses semua game untuk mode guru atau pratinjau cepat"
-            >
-              {bypassLock ? (
-                <>
-                  <Unlock className="w-3.5 h-3.5 text-amber-600" />
-                  <span>Semua Terbuka (Mode Eksplorasi Aktif)</span>
-                </>
-              ) : (
-                <>
-                  <Lock className="w-3.5 h-3.5 text-slate-400" />
-                  <span>Buka Semua Game (Mode Guru/Pratinjau)</span>
-                </>
-              )}
-            </button>
           </div>
         </div>
 
@@ -448,7 +424,7 @@ export const GamesView: React.FC<GamesViewProps> = ({
           </div>
 
           {/* Stats Bar */}
-          <div className="flex items-center gap-3 text-xs font-mono font-semibold">
+          <div className="flex items-center gap-2 sm:gap-3 text-xs font-mono font-semibold flex-wrap">
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 shadow-2xs text-slate-700">
               <Timer className="w-4 h-4 text-sky-500" />
               <span>{formatTime(seconds)}</span>
@@ -461,15 +437,17 @@ export const GamesView: React.FC<GamesViewProps> = ({
               <span>Cocok:</span>
               <strong className="text-emerald-600">{matchedPairs.length} / 6</strong>
             </div>
-            <button
-              onClick={startNewGame}
-              disabled={!isMatchGameUnlocked}
-              type="button"
-              className="p-2 rounded-xl bg-white hover:bg-slate-100 disabled:opacity-40 text-slate-700 border border-slate-200 shadow-2xs cursor-pointer transition"
-              title="Kocok Ulang Kartu"
-            >
-              <RotateCcw className="w-4 h-4" />
-            </button>
+            {hasGameStarted ? (
+              <button
+                onClick={handleStartGame}
+                type="button"
+                className="p-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 shadow-2xs cursor-pointer transition flex items-center gap-1 text-xs font-sans font-medium"
+                title="Kocok Ulang Kartu"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Kocok Ulang</span>
+              </button>
+            ) : null}
           </div>
         </div>
 
@@ -494,20 +472,61 @@ export const GamesView: React.FC<GamesViewProps> = ({
               <button
                 onClick={() => onNavigate('materi', completedChapters.length < 6 ? completedChapters.length : 0)}
                 type="button"
-                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-sky-500 hover:from-indigo-600 hover:to-sky-600 text-white text-xs font-bold shadow-md cursor-pointer transition"
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-sky-500 hover:from-indigo-600 hover:to-sky-600 text-white text-xs font-bold shadow-md cursor-pointer transition flex items-center gap-2"
               >
-                Lanjutkan Belajar Materi →
+                <BookOpen className="w-4 h-4" />
+                <span>Lanjutkan Belajar Materi →</span>
               </button>
-              <button
-                onClick={() => {
-                  setBypassLock(true);
-                  playClickSound();
-                }}
-                type="button"
-                className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold cursor-pointer transition border border-slate-700"
-              >
-                Buka Game Sekarang (Mode Guru)
-              </button>
+            </div>
+          </div>
+        ) : !hasGameStarted ? (
+          /* PRE-GAME START SCREEN WITH EXPLICIT START BUTTON */
+          <div className="space-y-6">
+            <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-purple-600 via-indigo-600 to-sky-600 text-white shadow-lg flex flex-col sm:flex-row items-center justify-between gap-6">
+              <div className="space-y-2 text-center sm:text-left max-w-xl">
+                <span className="px-3 py-1 bg-white/20 text-white rounded-full text-xs font-bold uppercase tracking-wider inline-flex items-center gap-1.5 backdrop-blur-xs">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                  Siap Menguji Kecepatan?
+                </span>
+                <h3 className="text-xl sm:text-2xl font-extrabold font-['Outfit']">
+                  Klik Tombol Mulai untuk Menjalankan Timer!
+                </h3>
+                <p className="text-xs sm:text-sm text-purple-100 leading-relaxed">
+                  Waktu akan mulai dihitung secara tepat ketika kamu menekan tombol di samping. Cocokkan 6 pasangan fungsi asli <code className="bg-black/20 px-1.5 py-0.5 rounded font-mono">f(x)</code> dengan rumus turunannya <code className="bg-black/20 px-1.5 py-0.5 rounded font-mono">f′(x)</code> secepat mungkin.
+                </p>
+              </div>
+
+              <div className="shrink-0">
+                <button
+                  onClick={handleStartGame}
+                  type="button"
+                  className="px-7 py-4 rounded-2xl bg-white hover:bg-amber-50 text-indigo-900 font-extrabold text-sm sm:text-base shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center gap-3 cursor-pointer"
+                >
+                  <Play className="w-5 h-5 text-indigo-600 fill-indigo-600" />
+                  <span>Mulai Permainan 🎮</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Inactive / Covered Cards Preview */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 opacity-70">
+              {cards.map((card, idx) => (
+                <div
+                  key={card.id || idx}
+                  onClick={handleStartGame}
+                  className="aspect-4/3 rounded-2xl p-4 flex flex-col items-center justify-center text-center bg-white/90 border-2 border-dashed border-purple-200/90 shadow-2xs hover:border-purple-400 hover:bg-purple-50/50 cursor-pointer transition select-none group"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-sm mb-2 group-hover:scale-110 transition">
+                    ?
+                  </div>
+                  <span className="text-[11px] font-bold text-purple-800">
+                    Kartu {idx + 1}
+                  </span>
+                  <span className="text-[10px] text-slate-400 mt-0.5">
+                    Klik Mulai Game
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         ) : (
@@ -529,13 +548,22 @@ export const GamesView: React.FC<GamesViewProps> = ({
                     </p>
                   </div>
                 </div>
-                <button
-                  onClick={startNewGame}
-                  type="button"
-                  className="px-5 py-2.5 rounded-xl bg-white text-emerald-800 font-bold text-xs hover:bg-emerald-50 transition shadow-sm cursor-pointer whitespace-nowrap"
-                >
-                  Main Lagi 🔄
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleStartGame}
+                    type="button"
+                    className="px-5 py-2.5 rounded-xl bg-white text-emerald-800 font-bold text-xs hover:bg-emerald-50 transition shadow-sm cursor-pointer whitespace-nowrap"
+                  >
+                    Main Lagi 🔄
+                  </button>
+                  <button
+                    onClick={handleResetGame}
+                    type="button"
+                    className="px-4 py-2.5 rounded-xl bg-emerald-700/80 hover:bg-emerald-800 text-white font-semibold text-xs transition cursor-pointer"
+                  >
+                    Selesai
+                  </button>
+                </div>
               </div>
             )}
 

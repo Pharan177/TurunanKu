@@ -201,6 +201,7 @@ export default function App() {
               solvedQuestions={solvedQuestions}
               userAnswers={userAnswers}
               onSolveQuestion={handleSolveQuestion}
+              completedChapters={completedChapters}
             />
           )}
 

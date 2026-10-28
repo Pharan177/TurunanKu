@@ -20,9 +20,76 @@ import {
 } from 'lucide-react';
 import { Calculus3DView } from './Calculus3DView';
 
-interface SimulasiViewProps {
-  onNavigate: (page: PageId) => void;
+interface GeneralFormInfo {
+  name: string;
+  formula: string;
+  derivativeFormula: string;
+  explanation: string;
+  paramMeanings: { key: string; label: string; role: string; color: string }[];
 }
+
+const GENERAL_FORMS_META: Record<string, GeneralFormInfo> = {
+  quadratic: {
+    name: 'Fungsi Parabola Kuadrat (Derajat 2)',
+    formula: 'f(x) = ax² + bx + c',
+    derivativeFormula: "f′(x) = 2ax + b",
+    explanation: 'Nilai a mengatur arah dan kelengkungan parabola, b mengatur kemiringan garis singgung di sumbu Y (x = 0), dan c adalah titik potong kurva dengan sumbu Y di koordinat (0, c).',
+    paramMeanings: [
+      { key: 'a', label: 'Koefisien a', role: 'Kelengkungan / arah buka parabola (+ ke atas, - ke bawah)', color: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
+      { key: 'b', label: 'Koefisien b', role: 'Kemiringan linier saat kurva memotong sumbu Y', color: 'bg-sky-50 text-sky-700 border-sky-200' },
+      { key: 'c', label: 'Konstanta c', role: 'Titik potong sumbu Y pada titik (0, c)', color: 'bg-teal-50 text-teal-700 border-teal-200' },
+    ],
+  },
+  cubic: {
+    name: 'Polinomial Derajat 3 (Kubik)',
+    formula: 'f(x) = ax³ + bx² + cx + d',
+    derivativeFormula: "f′(x) = 3ax² + 2bx + c",
+    explanation: 'Kurva kubik memiliki titik belok dan hingga 2 titik stasioner (puncak dan lembah). Titik puncak & lembah tersebut bertepatan dengan akar sumbu X pada grafik turunannya.',
+    paramMeanings: [
+      { key: 'a', label: 'Koefisien a', role: 'Arah ujung kurva kubik (orde-3)', color: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
+      { key: 'b', label: 'Koefisien b', role: 'Pergeseran dan bentuk titik belok (orde-2)', color: 'bg-sky-50 text-sky-700 border-sky-200' },
+      { key: 'c', label: 'Koefisien c', role: 'Gradien kurva saat melintasi sumbu Y', color: 'bg-teal-50 text-teal-700 border-teal-200' },
+      { key: 'd', label: 'Konstanta d', role: 'Titik potong sumbu Y pada titik (0, d)', color: 'bg-amber-50 text-amber-700 border-amber-200' },
+    ],
+  },
+  quartic: {
+    name: 'Polinomial Derajat 4 (Kuartik)',
+    formula: 'f(x) = ax⁴ + bx³ + cx² + dx + e',
+    derivativeFormula: "f′(x) = 4ax³ + 3bx² + 2cx + d",
+    explanation: 'Fungsi berderajat 4 (membentuk kurva bentuk W atau M) memiliki turunan berderajat 3 (kubik) dengan hingga 3 titik stasioner ekstermum lokal.',
+    paramMeanings: [
+      { key: 'a', label: 'Koefisien a', role: 'Kelengkungan orde-4 tertinggi', color: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
+      { key: 'b', label: 'Koefisien b', role: 'Asimetri gelombang kubik orde-3', color: 'bg-sky-50 text-sky-700 border-sky-200' },
+      { key: 'c', label: 'Koefisien c', role: 'Kelengkungan lokal tengah orde-2', color: 'bg-teal-50 text-teal-700 border-teal-200' },
+      { key: 'd', label: 'Koefisien d', role: 'Kemiringan garis singgung di x = 0', color: 'bg-amber-50 text-amber-700 border-amber-200' },
+      { key: 'e', label: 'Konstanta e', role: 'Titik potong sumbu Y pada titik (0, e)', color: 'bg-purple-50 text-purple-700 border-purple-200' },
+    ],
+  },
+  trig: {
+    name: 'Trigonometri Sinusoidal',
+    formula: 'f(x) = a · sin(bx + c) + d',
+    derivativeFormula: "f′(x) = a · b · cos(bx + c)",
+    explanation: 'Turunan fungsi sinus menghasilkan gelombang cosinus dengan fase mendahului 90° (π/2 radian) dan amplitudo dikalikan frekuensi sudut b.',
+    paramMeanings: [
+      { key: 'a', label: 'Amplitudo (a)', role: 'Tinggi gelombang dari garis tengah', color: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
+      { key: 'b', label: 'Frekuensi Sudut (b)', role: 'Kerapatan gelombang (periode T = 2π/b)', color: 'bg-sky-50 text-sky-700 border-sky-200' },
+      { key: 'c', label: 'Fase Sudut (c)', role: 'Pergeseran horisontal gelombang', color: 'bg-teal-50 text-teal-700 border-teal-200' },
+      { key: 'd', label: 'Geser Vertikal (d)', role: 'Tinggi garis sumbu tengah gelombang', color: 'bg-amber-50 text-amber-700 border-amber-200' },
+    ],
+  },
+  exponential: {
+    name: 'Fungsi Eksponensial (4 Parameter)',
+    formula: 'f(x) = a · b^(c · x) + d',
+    derivativeFormula: "f′(x) = a · c · ln(b) · b^(c · x)",
+    explanation: 'Fungsi eksponensial memiliki laju pertumbuhan yang sebanding dengan nilainya sendiri. Turunannya selalu menghasilkan bentuk eksponen yang sama dikalikan faktor c · ln(b).',
+    paramMeanings: [
+      { key: 'a', label: 'Faktor Skala (a)', role: 'Amplitudo / faktor pengali vertikal kurva', color: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
+      { key: 'b', label: 'Basis Eksponen (b)', role: 'Bilangan pokok (misal: 2, 3, atau e ≈ 2.718)', color: 'bg-sky-50 text-sky-700 border-sky-200' },
+      { key: 'c', label: 'Koefisien Pangkat (c)', role: 'Laju percepatan pertumbuhan/peluruhan eksponen', color: 'bg-teal-50 text-teal-700 border-teal-200' },
+      { key: 'd', label: 'Konstanta Geser (d)', role: 'Garis asimtot datar horizontal y = d', color: 'bg-amber-50 text-amber-700 border-amber-200' },
+    ],
+  },
+};
 
 export const SimulasiView: React.FC<SimulasiViewProps> = ({ onNavigate }) => {
   // Active Lab Mode: '2d' | '3d'
@@ -36,11 +103,11 @@ export const SimulasiView: React.FC<SimulasiViewProps> = ({ onNavigate }) => {
     'quadratic' | 'cubic' | 'quartic' | 'trig' | 'exponential'
   >('quadratic');
   const [paramVals, setParamVals] = useState<Record<string, number[]>>({
-    quadratic: [1, 2, -3],
-    cubic: [1, 0, 0, 0],
-    quartic: [1, 0, 0, 0, 0],
-    trig: [1, 1, 0, 0], // A, B, C, D
-    exponential: [1, 2, 0, 0], // A, b, h, k
+    quadratic: [1, 2, -3], // a, b, c
+    cubic: [1, 0, 0, 0], // a, b, c, d
+    quartic: [0.2, 0, -1, 0, 1], // a, b, c, d, e (5 parameters)
+    trig: [1, 1, 0, 0], // a, b, c, d
+    exponential: [1, 2, 1, 0], // a, b, c, d (4 parameters)
   });
 
   // LAB C: Prediction & Tangent Lab
@@ -110,7 +177,7 @@ export const SimulasiView: React.FC<SimulasiViewProps> = ({ onNavigate }) => {
     fnOriginal = (x) => a * x ** 4 + b * x ** 3 + c * x * x + d * x + e;
     fnDerivative = (x) => 4 * a * x ** 3 + 3 * b * x * x + 2 * c * x + d;
     labelOriginal = `f(x) = ${a}x⁴ + ${b}x³ + ${c}x² + ${d}x + ${e}`;
-    labelDerivative = `f′(x) = ${4 * a}x³ + ${3 * b}x² + ${2 * c}x + ${d}`;
+    labelDerivative = `f′(x) = ${formatNum(4 * a)}x³ + ${formatNum(3 * b)}x² + ${formatNum(2 * c)}x + ${formatNum(d)}`;
     noteOriginal = 'Polinomial derajat 4 membentuk turunan berderajat 3.';
   } else if (funcType === 'trig') {
     const [A, B, C, D] = currentParams;
@@ -123,16 +190,16 @@ export const SimulasiView: React.FC<SimulasiViewProps> = ({ onNavigate }) => {
     const maxAmp = Math.max(2, Math.abs(A) + Math.abs(D) + 1);
     yRange = { min: -maxAmp, max: maxAmp };
   } else {
-    // Exponential
-    const [A, b, h, k] = currentParams;
-    const base = b <= 0 || b === 1 ? 2 : b;
-    fnOriginal = (x) => A * Math.pow(base, x - h) + k;
-    fnDerivative = (x) => A * Math.log(base) * Math.pow(base, x - h);
-    labelOriginal = `f(x) = ${A} · ${base}^(x − ${h}) + ${k}`;
-    labelDerivative = `f′(x) = ${formatNum(A * Math.log(base))} · ${base}^(x − ${h})`;
-    noteOriginal = 'Fungsi eksponensial memiliki turunan yang sebanding dengan ketinggian fungsinya sendiri.';
-    xRange = { min: -3, max: 3 };
-    yRange = { min: -5, max: 10 };
+    // Exponential with 4 parameters: f(x) = a · b^(c · x) + d
+    const [a, b, c, d] = currentParams;
+    const base = b <= 0 ? 2 : b; // ensure base > 0
+    fnOriginal = (x) => a * Math.pow(base, c * x) + d;
+    fnDerivative = (x) => a * c * Math.log(base) * Math.pow(base, c * x);
+    labelOriginal = `f(x) = ${a} · ${base}^(${c}x) + ${d}`;
+    labelDerivative = `f′(x) = ${formatNum(a * c * Math.log(base))} · ${base}^(${c}x)`;
+    noteOriginal = 'Fungsi eksponensial memiliki turunan yang sebanding dengan ketinggian fungsinya dikalikan faktor c · ln(b).';
+    xRange = { min: -4, max: 4 };
+    yRange = { min: -5, max: 15 };
   }
 
   // Generate SVG paths for Lab B
@@ -388,146 +455,274 @@ export const SimulasiView: React.FC<SimulasiViewProps> = ({ onNavigate }) => {
           </select>
         </div>
 
+        {/* GENERAL FORM & FORMULA LOCATION DISPLAY (BENTUK UMUM FUNGSI) */}
+        {(() => {
+          const currentMeta = GENERAL_FORMS_META[funcType];
+          return (
+            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-indigo-50/90 via-sky-50/80 to-purple-50/90 border border-indigo-200/90 space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-800 bg-white/90 px-3 py-1 rounded-full border border-indigo-200 inline-flex items-center gap-1.5 shadow-2xs self-start">
+                  <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                  Bentuk Umum Persamaan & Lokasi Parameter
+                </span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-mono font-bold text-indigo-900 bg-white px-3 py-1 rounded-xl border border-indigo-200 shadow-2xs">
+                    {currentMeta.formula}
+                  </span>
+                  <span className="text-xs font-mono font-bold text-rose-700 bg-rose-50 px-3 py-1 rounded-xl border border-rose-200 shadow-2xs">
+                    {currentMeta.derivativeFormula}
+                  </span>
+                </div>
+              </div>
+
+              <p className="text-xs text-slate-600 leading-relaxed">
+                {currentMeta.explanation}
+              </p>
+
+              {/* Parameter breakdown badges */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 pt-1">
+                {currentMeta.paramMeanings.map((p) => (
+                  <div
+                    key={p.key}
+                    className={`p-2 rounded-xl border text-[11px] space-y-0.5 ${p.color}`}
+                  >
+                    <div className="font-bold flex items-center justify-between">
+                      <span>{p.label}</span>
+                      <span className="font-mono text-xs bg-white/80 px-1 rounded">{p.key}</span>
+                    </div>
+                    <div className="text-[10px] opacity-90 leading-tight">
+                      {p.role}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Parameter Inputs based on function type */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {funcType === 'quadratic' && (
-            <>
-              <label className="block text-xs font-bold text-slate-700">
-                Koefisien a:
-                <input
-                  type="number"
-                  value={currentParams[0]}
-                  onChange={(e) => updateParam(0, parseFloat(e.target.value) || 0)}
-                  className="mt-1 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono"
-                />
-              </label>
-              <label className="block text-xs font-bold text-slate-700">
-                Koefisien b:
-                <input
-                  type="number"
-                  value={currentParams[1]}
-                  onChange={(e) => updateParam(1, parseFloat(e.target.value) || 0)}
-                  className="mt-1 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono"
-                />
-              </label>
-              <label className="block text-xs font-bold text-slate-700">
-                Konstanta c:
-                <input
-                  type="number"
-                  value={currentParams[2]}
-                  onChange={(e) => updateParam(2, parseFloat(e.target.value) || 0)}
-                  className="mt-1 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono"
-                />
-              </label>
-            </>
-          )}
+        <div className="space-y-2">
+          <span className="text-xs font-bold text-slate-700 block">
+            Masukkan Nilai Parameter Fungsi:
+          </span>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            {funcType === 'quadratic' && (
+              <>
+                <label className="block text-xs font-bold text-slate-700">
+                  <span className="text-indigo-600 font-mono">a</span> (Koefisien x²):
+                  <input
+                    type="number"
+                    value={currentParams[0]}
+                    onChange={(e) => updateParam(0, parseFloat(e.target.value) || 0)}
+                    className="mt-1 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:bg-white focus:ring-2 focus:ring-indigo-400"
+                  />
+                </label>
+                <label className="block text-xs font-bold text-slate-700">
+                  <span className="text-sky-600 font-mono">b</span> (Koefisien x):
+                  <input
+                    type="number"
+                    value={currentParams[1]}
+                    onChange={(e) => updateParam(1, parseFloat(e.target.value) || 0)}
+                    className="mt-1 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:bg-white focus:ring-2 focus:ring-indigo-400"
+                  />
+                </label>
+                <label className="block text-xs font-bold text-slate-700">
+                  <span className="text-teal-600 font-mono">c</span> (Konstanta Suku Tetap):
+                  <input
+                    type="number"
+                    value={currentParams[2]}
+                    onChange={(e) => updateParam(2, parseFloat(e.target.value) || 0)}
+                    className="mt-1 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:bg-white focus:ring-2 focus:ring-indigo-400"
+                  />
+                </label>
+              </>
+            )}
 
-          {funcType === 'cubic' && (
-            <>
-              <label className="block text-xs font-bold text-slate-700">
-                a (x³):
-                <input
-                  type="number"
-                  value={currentParams[0]}
-                  onChange={(e) => updateParam(0, parseFloat(e.target.value) || 0)}
-                  className="mt-1 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono"
-                />
-              </label>
-              <label className="block text-xs font-bold text-slate-700">
-                b (x²):
-                <input
-                  type="number"
-                  value={currentParams[1]}
-                  onChange={(e) => updateParam(1, parseFloat(e.target.value) || 0)}
-                  className="mt-1 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono"
-                />
-              </label>
-              <label className="block text-xs font-bold text-slate-700">
-                c (x):
-                <input
-                  type="number"
-                  value={currentParams[2]}
-                  onChange={(e) => updateParam(2, parseFloat(e.target.value) || 0)}
-                  className="mt-1 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono"
-                />
-              </label>
-              <label className="block text-xs font-bold text-slate-700">
-                d (konstanta):
-                <input
-                  type="number"
-                  value={currentParams[3]}
-                  onChange={(e) => updateParam(3, parseFloat(e.target.value) || 0)}
-                  className="mt-1 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono"
-                />
-              </label>
-            </>
-          )}
+            {funcType === 'cubic' && (
+              <>
+                <label className="block text-xs font-bold text-slate-700">
+                  <span className="text-indigo-600 font-mono">a</span> (Koefisien x³):
+                  <input
+                    type="number"
+                    value={currentParams[0]}
+                    onChange={(e) => updateParam(0, parseFloat(e.target.value) || 0)}
+                    className="mt-1 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:bg-white focus:ring-2 focus:ring-indigo-400"
+                  />
+                </label>
+                <label className="block text-xs font-bold text-slate-700">
+                  <span className="text-sky-600 font-mono">b</span> (Koefisien x²):
+                  <input
+                    type="number"
+                    value={currentParams[1]}
+                    onChange={(e) => updateParam(1, parseFloat(e.target.value) || 0)}
+                    className="mt-1 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:bg-white focus:ring-2 focus:ring-indigo-400"
+                  />
+                </label>
+                <label className="block text-xs font-bold text-slate-700">
+                  <span className="text-teal-600 font-mono">c</span> (Koefisien x):
+                  <input
+                    type="number"
+                    value={currentParams[2]}
+                    onChange={(e) => updateParam(2, parseFloat(e.target.value) || 0)}
+                    className="mt-1 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:bg-white focus:ring-2 focus:ring-indigo-400"
+                  />
+                </label>
+                <label className="block text-xs font-bold text-slate-700">
+                  <span className="text-amber-600 font-mono">d</span> (Konstanta Suku Tetap):
+                  <input
+                    type="number"
+                    value={currentParams[3]}
+                    onChange={(e) => updateParam(3, parseFloat(e.target.value) || 0)}
+                    className="mt-1 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:bg-white focus:ring-2 focus:ring-indigo-400"
+                  />
+                </label>
+              </>
+            )}
 
-          {funcType === 'trig' && (
-            <>
-              <label className="block text-xs font-bold text-slate-700">
-                Amplitudo (A):
-                <input
-                  type="number"
-                  value={currentParams[0]}
-                  onChange={(e) => updateParam(0, parseFloat(e.target.value) || 0)}
-                  className="mt-1 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono"
-                />
-              </label>
-              <label className="block text-xs font-bold text-slate-700">
-                Frekuensi (B):
-                <input
-                  type="number"
-                  value={currentParams[1]}
-                  onChange={(e) => updateParam(1, parseFloat(e.target.value) || 0)}
-                  className="mt-1 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono"
-                />
-              </label>
-              <label className="block text-xs font-bold text-slate-700">
-                Fase (C):
-                <input
-                  type="number"
-                  value={currentParams[2]}
-                  onChange={(e) => updateParam(2, parseFloat(e.target.value) || 0)}
-                  className="mt-1 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono"
-                />
-              </label>
-              <label className="block text-xs font-bold text-slate-700">
-                Geser Vertikal (D):
-                <input
-                  type="number"
-                  value={currentParams[3]}
-                  onChange={(e) => updateParam(3, parseFloat(e.target.value) || 0)}
-                  className="mt-1 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono"
-                />
-              </label>
-            </>
-          )}
+            {/* QUARTIC POLYNOMIAL (DEGREE 4) WITH ALL 5 PARAMETERS: a, b, c, d, e */}
+            {funcType === 'quartic' && (
+              <>
+                <label className="block text-xs font-bold text-slate-700">
+                  <span className="text-indigo-600 font-mono">a</span> (Koefisien x⁴):
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={currentParams[0]}
+                    onChange={(e) => updateParam(0, parseFloat(e.target.value) || 0)}
+                    className="mt-1 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:bg-white focus:ring-2 focus:ring-indigo-400"
+                  />
+                </label>
+                <label className="block text-xs font-bold text-slate-700">
+                  <span className="text-sky-600 font-mono">b</span> (Koefisien x³):
+                  <input
+                    type="number"
+                    step="0.5"
+                    value={currentParams[1]}
+                    onChange={(e) => updateParam(1, parseFloat(e.target.value) || 0)}
+                    className="mt-1 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:bg-white focus:ring-2 focus:ring-indigo-400"
+                  />
+                </label>
+                <label className="block text-xs font-bold text-slate-700">
+                  <span className="text-teal-600 font-mono">c</span> (Koefisien x²):
+                  <input
+                    type="number"
+                    step="0.5"
+                    value={currentParams[2]}
+                    onChange={(e) => updateParam(2, parseFloat(e.target.value) || 0)}
+                    className="mt-1 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:bg-white focus:ring-2 focus:ring-indigo-400"
+                  />
+                </label>
+                <label className="block text-xs font-bold text-slate-700">
+                  <span className="text-amber-600 font-mono">d</span> (Koefisien x):
+                  <input
+                    type="number"
+                    step="0.5"
+                    value={currentParams[3]}
+                    onChange={(e) => updateParam(3, parseFloat(e.target.value) || 0)}
+                    className="mt-1 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:bg-white focus:ring-2 focus:ring-indigo-400"
+                  />
+                </label>
+                <label className="block text-xs font-bold text-slate-700">
+                  <span className="text-purple-600 font-mono">e</span> (Konstanta Tetap):
+                  <input
+                    type="number"
+                    step="0.5"
+                    value={currentParams[4]}
+                    onChange={(e) => updateParam(4, parseFloat(e.target.value) || 0)}
+                    className="mt-1 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:bg-white focus:ring-2 focus:ring-indigo-400"
+                  />
+                </label>
+              </>
+            )}
 
-          {funcType === 'exponential' && (
-            <>
-              <label className="block text-xs font-bold text-slate-700">
-                Skala (A):
-                <input
-                  type="number"
-                  value={currentParams[0]}
-                  onChange={(e) => updateParam(0, parseFloat(e.target.value) || 0)}
-                  className="mt-1 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono"
-                />
-              </label>
-              <label className="block text-xs font-bold text-slate-700">
-                Basis Eksponen (b):
-                <input
-                  type="number"
-                  min="0.1"
-                  step="0.5"
-                  value={currentParams[1]}
-                  onChange={(e) => updateParam(1, parseFloat(e.target.value) || 2)}
-                  className="mt-1 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono"
-                />
-              </label>
-            </>
-          )}
+            {funcType === 'trig' && (
+              <>
+                <label className="block text-xs font-bold text-slate-700">
+                  <span className="text-indigo-600 font-mono">a</span> (Amplitudo):
+                  <input
+                    type="number"
+                    value={currentParams[0]}
+                    onChange={(e) => updateParam(0, parseFloat(e.target.value) || 0)}
+                    className="mt-1 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:bg-white focus:ring-2 focus:ring-indigo-400"
+                  />
+                </label>
+                <label className="block text-xs font-bold text-slate-700">
+                  <span className="text-sky-600 font-mono">b</span> (Frekuensi):
+                  <input
+                    type="number"
+                    value={currentParams[1]}
+                    onChange={(e) => updateParam(1, parseFloat(e.target.value) || 0)}
+                    className="mt-1 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:bg-white focus:ring-2 focus:ring-indigo-400"
+                  />
+                </label>
+                <label className="block text-xs font-bold text-slate-700">
+                  <span className="text-teal-600 font-mono">c</span> (Fase Sudut):
+                  <input
+                    type="number"
+                    value={currentParams[2]}
+                    onChange={(e) => updateParam(2, parseFloat(e.target.value) || 0)}
+                    className="mt-1 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:bg-white focus:ring-2 focus:ring-indigo-400"
+                  />
+                </label>
+                <label className="block text-xs font-bold text-slate-700">
+                  <span className="text-amber-600 font-mono">d</span> (Geser Vertikal):
+                  <input
+                    type="number"
+                    value={currentParams[3]}
+                    onChange={(e) => updateParam(3, parseFloat(e.target.value) || 0)}
+                    className="mt-1 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:bg-white focus:ring-2 focus:ring-indigo-400"
+                  />
+                </label>
+              </>
+            )}
+
+            {/* EXPONENTIAL FUNCTION WITH FULL 4 PARAMETERS: a, b, c, d */}
+            {funcType === 'exponential' && (
+              <>
+                <label className="block text-xs font-bold text-slate-700">
+                  <span className="text-indigo-600 font-mono">a</span> (Faktor Skala):
+                  <input
+                    type="number"
+                    step="0.5"
+                    value={currentParams[0]}
+                    onChange={(e) => updateParam(0, parseFloat(e.target.value) || 0)}
+                    className="mt-1 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:bg-white focus:ring-2 focus:ring-indigo-400"
+                  />
+                </label>
+                <label className="block text-xs font-bold text-slate-700">
+                  <span className="text-sky-600 font-mono">b</span> (Basis Eksponen):
+                  <input
+                    type="number"
+                    min="0.1"
+                    step="0.5"
+                    value={currentParams[1]}
+                    onChange={(e) => updateParam(1, parseFloat(e.target.value) || 2)}
+                    className="mt-1 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:bg-white focus:ring-2 focus:ring-indigo-400"
+                  />
+                </label>
+                <label className="block text-xs font-bold text-slate-700">
+                  <span className="text-teal-600 font-mono">c</span> (Koefisien Pangkat x):
+                  <input
+                    type="number"
+                    step="0.5"
+                    value={currentParams[2]}
+                    onChange={(e) => updateParam(2, parseFloat(e.target.value) || 0)}
+                    className="mt-1 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:bg-white focus:ring-2 focus:ring-indigo-400"
+                  />
+                </label>
+                <label className="block text-xs font-bold text-slate-700">
+                  <span className="text-amber-600 font-mono">d</span> (Geser Vertikal / Asimtot):
+                  <input
+                    type="number"
+                    step="0.5"
+                    value={currentParams[3]}
+                    onChange={(e) => updateParam(3, parseFloat(e.target.value) || 0)}
+                    className="mt-1 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:bg-white focus:ring-2 focus:ring-indigo-400"
+                  />
+                </label>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Live Formula Previews */}
@@ -592,22 +787,24 @@ export const SimulasiView: React.FC<SimulasiViewProps> = ({ onNavigate }) => {
 
       {/* LAB SECTION C: PREDIKSI & GARIS SINGGUNG */}
       <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-5">
-        <div>
-          <span className="px-2.5 py-0.5 bg-amber-100 text-amber-800 rounded-full text-xs font-bold uppercase tracking-wider">
-            Laboratorium C
-          </span>
-          <h2 className="text-xl font-bold text-slate-900 mt-1 font-['Outfit']">
-            Uji Prediksi Gradien & Garis Singgung
-          </h2>
-          <p className="text-xs text-slate-500 mt-1">
-            Tentukan persamaan kuadrat <span className="font-mono">f(x) = ax² + bx + c</span> dan uji ketepatan analisismu:
-          </p>
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <span className="px-2.5 py-0.5 bg-amber-100 text-amber-800 rounded-full text-xs font-bold uppercase tracking-wider">
+              Laboratorium C
+            </span>
+            <h2 className="text-xl font-bold text-slate-900 mt-1 font-['Outfit']">
+              Uji Prediksi Gradien & Garis Singgung
+            </h2>
+            <p className="text-xs text-slate-500 mt-1">
+              Bentuk Umum Parabola: <span className="font-mono font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">f(x) = ax² + bx + c</span> dengan turunan <span className="font-mono font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">f′(x) = 2ax + b</span>
+            </p>
+          </div>
         </div>
 
         {/* Quadratic Inputs */}
         <div className="grid sm:grid-cols-3 gap-3">
           <label className="block text-xs font-bold text-slate-700">
-            Koefisien a
+            <span className="text-indigo-600 font-mono">a</span> (Koefisien x²):
             <input
               type="number"
               value={predA}
@@ -615,11 +812,11 @@ export const SimulasiView: React.FC<SimulasiViewProps> = ({ onNavigate }) => {
                 setPredA(parseFloat(e.target.value) || 0);
                 setShowPredResult(false);
               }}
-              className="mt-1 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono"
+              className="mt-1 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:bg-white focus:ring-2 focus:ring-amber-400"
             />
           </label>
           <label className="block text-xs font-bold text-slate-700">
-            Koefisien b
+            <span className="text-sky-600 font-mono">b</span> (Koefisien x):
             <input
               type="number"
               value={predB}
@@ -627,11 +824,11 @@ export const SimulasiView: React.FC<SimulasiViewProps> = ({ onNavigate }) => {
                 setPredB(parseFloat(e.target.value) || 0);
                 setShowPredResult(false);
               }}
-              className="mt-1 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono"
+              className="mt-1 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:bg-white focus:ring-2 focus:ring-amber-400"
             />
           </label>
           <label className="block text-xs font-bold text-slate-700">
-            Konstanta c
+            <span className="text-teal-600 font-mono">c</span> (Konstanta Suku Bebas):
             <input
               type="number"
               value={predC}
