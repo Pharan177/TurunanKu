@@ -1,0 +1,48 @@
+
+name: Deploy TurunanKu
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Mengambil kode website
+        uses: actions/checkout@v4
+
+      - name: Menyiapkan Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Memasang dependensi
+        run: npm install
+
+      - name: Membangun website
+        run: npm run build
+
+      - name: Menyiapkan GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Mengunggah hasil build
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+      - name: Mempublikasikan website
+        id: deployment
+        uses: actions/deploy-pages@v4
